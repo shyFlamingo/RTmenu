@@ -5,8 +5,7 @@ This system uses the arduino software.
 Performs mutliple operations:
   1.Char echo
   2.Char hex echo
-  3.Blink LED
-  4.Change Cursor Speed
+  3.Change Cursor Speed
   
   
 pressing escape returns user to main menu
