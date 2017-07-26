@@ -19,6 +19,9 @@
  volatile unsigned char *myUDR0   = (unsigned char *)0x00C6;
  unsigned char inputChar = 0;
  int delayTime = 1000;
+ unsigned long cursCount = 0;
+ unsigned long cursChange = 100000;
+ int changes = 0;
 
 
 
@@ -37,35 +40,53 @@ void loop() {
   makeMenu();
   sysWrk();
 }
-
+/*
+ * surprise function that draws an image onto the terminal 
+ */
 void surprise(){
-  return;
-}
-
-void cursSpeed(){
-  return;
-}
-
-void blinkLED(){
   resetScreen();
-  Serial.println("This is the led blinking program, the LED on the Arduino blinks");
-  Serial.println("Press - and + to change the speed of the blinking ");
-  while (inputChar != 27) {
-    inputChar = 0;
-    if (U0kbhit() == 1) inputChar = U0getChar();
-    if ( inputChar == 43 ){
-      if( delayTime - 10 > 250) delayTime = delayTime - 1000;
+  Serial.println("This is the moster of the program...");
+  Serial.println("He lives inside your computer...");
+  Serial.println("Pressing escape returns to the main menu...");
+  Serial.println();
+  Serial.println("|(|)|(|)|(|)|(|)|(|)|(|)|(|)|");
+  Serial.println("|    __                __   |");
+  Serial.println("<   ..@                @..   >");
+  Serial.println("\\                            /");
+  Serial.println("\\          XXXXXXXX         /");
+  Serial.println(" \\                         /  ");
+  Serial.println("         ^^^^^^^^^^^^^^^       ");
+  while( inputChar != 27 ){
+    while (U0kbhit()==0){     makeCurs(); };  // wait for RDA = true
+    inputChar = U0getChar();    // read character
+  }
+  resetScreen();
+  return;
+}
+
+/*
+ * changes the speed of the cursor 
+ */
+void cursSpeed(){
+  resetScreen();
+  Serial.println("This is the cursor speed portion of the program...");
+  Serial.println("This program changes the speed of the cursor...");
+  Serial.println("Pressing escape returns to the main menu...");
+  while( inputChar != 27 ){
+    while (U0kbhit()==0){     makeCurs(); };  // wait for RDA = true
+    inputChar = U0getChar();    // read character
+    switch( inputChar ){
+      case '-':
+        cursChange += 3000;
+        break;
+      case '+':
+        cursChange -= 3000;
+        break;
+      default:
+        clearLine();
+        putstr("      Please input number either - or + ");
+        break;
     }
-    else if ( inputChar == 45){
-      if( delayTime + 10 < 10000) delayTime = delayTime + 1000;
-    }
-    U0putChar( inputChar );
-    *portB ^= 0x60;
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(delayTime);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(delayTime);
-    clearLine();
   }
   resetScreen();
 }
@@ -73,7 +94,7 @@ void blinkLED(){
 void echoHex(){
   resetScreen();
   Serial.println("This is the hex key echo program...");
-  Serial.println("This program prints the ehx value of the key entered...");
+  Serial.println("This program prints the hex value of the key entered...");
   Serial.println("Pressing return erases the line...");
   Serial.println("Pressing escape returns to the main menu...");
   int cs2, cs3;
@@ -122,9 +143,38 @@ void echoChar(){
   }
 }
 
+void makeCurs(){
+  cursCount++;
+  if( cursCount >= cursChange ){
+    cursCount = 0;
+    changes++;
+    if( changes > 3 ) changes = 0;
+    switch( changes ){
+      case 0:
+        clearLine();
+        Serial.print("      >--- ");
+        break;
+      case 1:
+        clearLine();
+        Serial.print("      ->-- ");
+        break;
+      case 2:
+        clearLine();
+        Serial.print("      -->- ");
+        break;
+      case 3:
+        clearLine();
+        Serial.print("      ---> ");
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 void sysWrk(){
   while( inputChar != 27 ){
-    while (U0kbhit()==0){};  // wait for RDA = true
+    while (U0kbhit()==0){     makeCurs(); };  // wait for RDA = true
     inputChar = U0getChar();    // read character
     switch( inputChar ){
       case '1':
@@ -134,19 +184,16 @@ void sysWrk(){
         echoHex();
         break;
       case '3':
-         blinkLED();
-        break;
-      case '4':
        cursSpeed();
        break;
-      case '5':
+      case '4':
        surprise();
        break;
       case 'q':
         break;
       default:
         clearLine();
-        putstr("      Please input number between 1 and 5 inclusive ");
+        putstr("      Please input number between 1 and 4 inclusive ");
         break;
     }
   }
@@ -165,9 +212,8 @@ void makeMenu(){
   Serial.println("Pressing escape will bring you back to the main menu. ");  
   Serial.println("[1] Key Echo ");  
   Serial.println("[2] Hex Key Echo ");  
-  Serial.println("[3] Blink LED ");   
-  Serial.println("[4] Change Cursor Speed ");  
-  Serial.println("[5] Surprise ");   
+  Serial.println("[3] Change Cursor Speed ");  
+  Serial.println("[4] Surprise ");   
 }
 
 void resetScreen(){
